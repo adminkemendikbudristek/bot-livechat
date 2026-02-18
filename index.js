@@ -1,3 +1,19 @@
+import express from "express";
+import OpenAI from "openai";
+
+const app = express();
+app.use(express.json());
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Root check
+app.get("/", (req, res) => {
+  res.json({ status: "Server aktif 🚀" });
+});
+
+// Webhook
 app.post("/webhook", async (req, res) => {
   try {
     console.log("BODY MASUK:", req.body);
@@ -16,16 +32,15 @@ app.post("/webhook", async (req, res) => {
         {
           role: "system",
           content: `
-Kamu adalah sistem klasifikasi gambar.
-Jawab hanya salah satu kata berikut saja tanpa tambahan apapun:
+Jawab hanya salah satu:
 BUKTI_TRANSFER
 KONTEN_SENSITIF
 AMAN
 
 Aturan:
-- Jika gambar adalah bukti transfer bank, bukti pembayaran, screenshot m-banking → jawab BUKTI_TRANSFER
-- Jika gambar mengandung pornografi, ketelanjangan, kekerasan → jawab KONTEN_SENSITIF
-- Selain itu → jawab AMAN
+- Bukti transfer / pembayaran → BUKTI_TRANSFER
+- Pornografi / kekerasan → KONTEN_SENSITIF
+- Selain itu → AMAN
 `
         },
         {
@@ -42,14 +57,11 @@ Aturan:
     });
 
     const result = response.choices[0].message.content.trim();
-
     console.log("HASIL AI:", result);
 
-    // 🔥 HANDLE HASIL
     if (result === "BUKTI_TRANSFER") {
       return res.json({
-        reply: "✅ Bukti transfer diterima. Anda akan segera dihubungkan ke agent.",
-        transfer_to_agent: true
+        reply: "✅ Bukti transfer diterima. Anda akan segera dihubungkan ke agent."
       });
     }
 
@@ -71,4 +83,9 @@ Aturan:
     console.error(error);
     res.status(500).json({ error: "Terjadi kesalahan di server" });
   }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Server jalan di port " + PORT);
 });
