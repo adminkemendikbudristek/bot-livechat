@@ -8,6 +8,12 @@ app.get("/", (req, res) => {
 });
 
 app.get("/webhook", (req, res) => {
+  const challenge = req.query.challenge;
+
+  if (challenge) {
+    return res.send(challenge);
+  }
+
   res.send("Webhook aktif");
 });
 
